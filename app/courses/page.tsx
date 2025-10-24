@@ -32,7 +32,7 @@ export default function CoursesPage() {
   const loadUnifiedCourses = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/courses/unified?trending=true')
+      const response = await fetch('/api/courses/unified?free=true')
       const data = await response.json()
       if (data.success && Array.isArray(data.data)) {
         // Filter out any invalid courses
@@ -169,7 +169,7 @@ export default function CoursesPage() {
       </div>
 
       {/* Platform Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Card className="p-6 border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-3xl">▶️</span>
@@ -202,9 +202,9 @@ export default function CoursesPage() {
           </ul>
         </Card>
             </div>
-
+       */}
       {/* Unified CTA */}
-      <div className="mb-8 flex items-center justify-center">
+       {/* <div className="mb-8 flex items-center justify-center">
         <Button
           className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl"
           onClick={() => {
@@ -215,22 +215,22 @@ export default function CoursesPage() {
         >
           <Zap className="w-4 h-4 mr-2" />
           Explore Unified Courses
-        </Button>
-      </div>
+        </Button> 
+      </div>  */}
 
       <Tabs defaultValue="unified" className="space-y-8">
 
         {/* Unified Courses Tab */}
         <TabsContent value="unified" className="space-y-6">
-          <div className="text-center mb-8">
+          {/* <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-2">All Course Recommendations</h2>
             <p className="text-muted-foreground">
               Browse courses from both YouTube and Udemy in one unified interface
             </p>
-          </div>
+          </div> */}
 
           {/* Unified Course Categories */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          {/* <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             {commonCourseCategories.map((category) => (
               <UnifiedCategoryButton
                 key={category.id}
@@ -238,7 +238,7 @@ export default function CoursesPage() {
                 onClick={() => loadUnifiedCourses()}
               />
             ))}
-          </div>
+          </div> */}
 
           {/* Unified Course Search */}
           <Card className="p-6">

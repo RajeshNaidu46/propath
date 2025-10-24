@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { bertNLPService } from '@/lib/bert-nlp-service'
+import { bertNLPService } from '@/lib/bertNLPService'
 
 interface ResumeAnalysisRequest {
   content: string

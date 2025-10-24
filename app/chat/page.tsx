@@ -10,11 +10,24 @@ export default function ChatPage() {
           AI Career Assistant
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Get personalized career guidance, resume tips, skill assessments, and learning recommendations from your AI companion powered by Gemini.
+          Get personalized career guidance, resume tips, skill assessments, and learning recommendations from your AI companion powered by chatbase.
         </p>
-      </div>
+<iframe
+  className="iframe"
+  src="https://www.chatbase.co/chatbot-iframe/0hsoxkT2LDM08KOVUoLEH"
+  style={{ 
+    width: '600px', 
+    height: '500px', 
+    display: 'block', 
+    margin: '0 auto', 
+    border: 'none', 
+    borderRadius: '12px' 
+  }}
+></iframe>
+</div>
+
       
-      <EnhancedChatInterface />
+      {/* <EnhancedChatInterface /> */}
     </div>
   )
 }

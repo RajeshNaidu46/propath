@@ -13,7 +13,7 @@ import {
   Brain,
   AlertCircle
 } from "lucide-react"
-import { bertNLPService } from "@/lib/bert-nlp-service"
+import { bertNLPService } from "@/lib/bertNLPService"
 
 interface ResumeUploadProps {
   onAnalysisComplete: (analysis: any) => void
@@ -30,9 +30,11 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
   const [analysisProgress, setAnalysisProgress] = useState(0)
   const [analysisComplete, setAnalysisComplete] = useState(false)
   const [analysisData, setAnalysisData] = useState<any>(null)
-  // jobTitle now comes from parent
   const [error, setError] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Local copy of jobTitle for analysis call
+  const [localJobTitle] = useState(jobTitle)
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -49,16 +51,12 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
     setIsDragging(false)
     
     const files = e.dataTransfer.files
-    if (files.length > 0) {
-      handleFileSelect(files[0])
-    }
+    if (files.length > 0) handleFileSelect(files[0])
   }
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
-    if (files && files.length > 0) {
-      handleFileSelect(files[0])
-    }
+    if (files && files.length > 0) handleFileSelect(files[0])
   }
 
   const handleFileSelect = (file: File) => {
@@ -67,7 +65,7 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
       return
     }
     
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+    if (file.size > 10 * 1024 * 1024) {
       setError("File size must be less than 10MB")
       return
     }
@@ -92,21 +90,15 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
   }
 
   const extractTextFromPDF = async (file: File): Promise<string> => {
-    // Try to read as ArrayBuffer and fallback to text; placeholder extraction
     return new Promise((resolve) => {
       const reader = new FileReader()
       reader.onload = () => {
         const raw = reader.result
-        // Heuristic: attempt to decode as text, otherwise return empty string
         let text = ""
-        if (typeof raw === 'string') {
-          text = raw
-        } else if (raw instanceof ArrayBuffer) {
-          try {
-            text = new TextDecoder('utf-8').decode(new Uint8Array(raw))
-          } catch {
-            text = ''
-          }
+        if (typeof raw === 'string') text = raw
+        else if (raw instanceof ArrayBuffer) {
+          try { text = new TextDecoder('utf-8').decode(new Uint8Array(raw)) } 
+          catch { text = '' }
         }
         resolve(text || 'Resume content could not be fully extracted. Please ensure the PDF contains selectable text.')
       }
@@ -123,45 +115,27 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
     onUploadStart()
 
     try {
-      // Extract text from PDF
       const textContent = await extractTextFromPDF(uploadedFile)
-      console.log('Extracted text content:', textContent.substring(0, 200) + '...')
 
       // Simulate analysis progress
-    const analysisSteps = [
-      "Extracting text content...",
-      "Analyzing document structure...",
-        "Processing with Haystack + BERT...",
-      "Extracting skills and keywords...",
-      "Generating ATS optimization score...",
-      "Creating personalized recommendations..."
-    ]
-
-    let currentStep = 0
-    const analysisInterval = setInterval(() => {
-      setAnalysisProgress(prev => {
+      const analysisInterval = setInterval(() => {
+        setAnalysisProgress(prev => {
           if (prev >= 90) {
-          clearInterval(analysisInterval)
+            clearInterval(analysisInterval)
             return 90
-        }
+          }
           return prev + 15
-      })
-        currentStep++
+        })
       }, 1000)
 
-      // Call BERT NLP service
-      console.log('🔍 Calling BERT NLP service...')
-      const bertResponse = await bertNLPService.analyzeResume(textContent, jobTitle)
+      const bertResponse = await bertNLPService.analyzeResume(textContent, localJobTitle)
       
       clearInterval(analysisInterval)
       setAnalysisProgress(100)
-      
-      console.log('✅ BERT analysis completed:', bertResponse)
-      
-      // Format the response for the existing component
+
       const formattedAnalysis = {
         resumeContent: textContent,
-        jobTitle: jobTitle,
+        jobTitle: localJobTitle,
         overallScore: Math.round(bertResponse.readability.score),
         skills: Array.from(new Set(bertResponse.skills.map(skill => skill.skill))),
         experience: bertResponse.experience.length,
@@ -184,16 +158,12 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
 
       setAnalysisData(formattedAnalysis)
       setAnalysisComplete(true)
-      
-      // Call the parent callback
       onAnalysisComplete(formattedAnalysis)
       
-      setTimeout(() => {
-        setIsAnalyzing(false)
-    }, 1000)
+      setTimeout(() => setIsAnalyzing(false), 1000)
 
     } catch (error) {
-      console.error('❌ Analysis failed:', error)
+      console.error('Analysis failed:', error)
       setError(error instanceof Error ? error.message : 'Analysis failed')
       setIsAnalyzing(false)
       setAnalysisProgress(0)
@@ -208,7 +178,6 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
     setError("")
 
     try {
-      // Simulate upload progress
       const uploadInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -219,7 +188,6 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
         })
       }, 200)
 
-      // Simulate upload delay
       await new Promise(resolve => setTimeout(resolve, 2000))
       
       clearInterval(uploadInterval)
@@ -254,36 +222,12 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
         </p>
       </div>
 
-      {/* Job Title Input */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="space-y-3">
-            <label htmlFor="jobTitle" className="text-sm font-medium text-gray-700">
-              Target Job Title (Optional)
-            </label>
-            <input
-              id="jobTitle"
-              type="text"
-              value={jobTitle}
-              onChange={(e) => setJobTitle(e.target.value)}
-              placeholder="e.g., Software Engineer, Data Scientist"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <p className="text-xs text-gray-500">
-              Adding a job title helps provide more targeted analysis and matching
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* File Upload Area */}
       <Card>
         <CardContent className="p-6">
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragging
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 hover:border-gray-400"
+              isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -342,7 +286,6 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
             )}
           </div>
 
-          {/* Hidden file input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -376,9 +319,7 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
           </CardHeader>
           <CardContent>
             <Progress value={uploadProgress} className="w-full" />
-            <p className="text-sm text-gray-600 mt-2">
-                {uploadProgress}% complete
-              </p>
+            <p className="text-sm text-gray-600 mt-2">{uploadProgress}% complete</p>
           </CardContent>
         </Card>
       )}
@@ -394,23 +335,7 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
           </CardHeader>
           <CardContent>
             <Progress value={analysisProgress} className="w-full" />
-            <p className="text-sm text-gray-600 mt-2">
-              {analysisProgress}% complete
-            </p>
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span>Processing with BERT models...</span>
-                </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Extracting skills and experience...</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                <span>Generating recommendations...</span>
-              </div>
-            </div>
+            <p className="text-sm text-gray-600 mt-2">{analysisProgress}% complete</p>
           </CardContent>
         </Card>
       )}
@@ -422,7 +347,7 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
+              </div>
               <div>
                 <h3 className="text-lg font-semibold text-green-800">
                   Analysis Complete! 🎉
@@ -444,10 +369,10 @@ export function ResumeUpload({ onAnalysisComplete, onUploadStart, jobTitle = "" 
                   </div>
                   <div className="text-green-600">Skills Found</div>
                 </div>
-            </div>
+              </div>
             </div>
           </CardContent>
-          </Card>
+        </Card>
       )}
     </div>
   )

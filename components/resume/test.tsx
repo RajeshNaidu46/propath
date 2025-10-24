@@ -93,7 +93,7 @@ export function ResumeAnalysisResults({ resumeContent }: ResumeAnalysisResultsPr
     if (!analysis) return
     const roleSkills = role && roleSkillsMap[role] ? roleSkillsMap[role] : []
     const skillsGap = calculateSkillsGap(analysis, roleSkills)
-    const ats = skillsGap ? Math.round((skillsGap.matched.length / skillsGap.requiredSkills.length) * 100) : 0
+    const ats = calculateATSScore(analysis, roleSkills)
     setAnalysis({ ...analysis, skillsGap })
     setAtsScore(ats)
   }
@@ -130,37 +130,28 @@ export function ResumeAnalysisResults({ resumeContent }: ResumeAnalysisResultsPr
 
   const calculateATSScore = (analysis: ResumeAnalysis, requiredSkills: string[]) => {
     if (!requiredSkills || requiredSkills.length === 0) return 0
-    const tempGap = calculateSkillsGap(analysis, requiredSkills)
-    return tempGap ? Math.round((tempGap.matched.length / tempGap.requiredSkills.length) * 100) : 0
+    const resumeSkills = analysis.skills.map((s) => s.skill.toLowerCase())
+    const matchedCount = requiredSkills.filter((rs) => resumeSkills.includes(rs.toLowerCase())).length
+    return Math.round((matchedCount / requiredSkills.length) * 100)
   }
 
   const calculateSkillsGap = (analysis: ResumeAnalysis, requiredSkills: string[]) => {
     if (!requiredSkills || requiredSkills.length === 0) return undefined
+    const resumeSkills = analysis.skills.map((s) => s.skill.toLowerCase())
     const matched: string[] = []
     const weak: string[] = []
-    const strong: string[] = []
     const missing: string[] = []
     const confidenceMap: { [skill: string]: number } = {}
 
     requiredSkills.forEach((skill) => {
-      const found = analysis.skills.find((s) => {
-        const lowerS = s.skill.toLowerCase()
-        const lowerSkill = skill.toLowerCase()
-        return lowerS.includes(lowerSkill) || lowerSkill.includes(lowerS)
-      })
+      const found = analysis.skills.find((s) => s.skill.toLowerCase() === skill.toLowerCase())
       if (found) {
-        matched.push(found.skill)
         confidenceMap[found.skill] = found.confidence
-        if (found.confidence >= 0.7) {
-          strong.push(found.skill)
-        } else {
-          weak.push(found.skill)
-        }
-      } else {
-        missing.push(skill)
-      }
+        if (found.confidence >= 0.7) matched.push(found.skill)
+        else weak.push(found.skill)
+      } else missing.push(skill)
     })
-    return { requiredSkills, matched, weak, strong, missing, confidenceMap }
+    return { requiredSkills, matched, weak, strong: matched, missing, confidenceMap }
   }
 
   const getScoreColor = (score: number) =>
@@ -239,7 +230,7 @@ export function ResumeAnalysisResults({ resumeContent }: ResumeAnalysisResultsPr
           <div className="flex items-center gap-4">
             <div className="text-center">
               <div className="text-sm font-medium">ATS Compatibility</div>
-              {/* <div className={getScoreColor(atsScore)}>{atsScore}%</div> */}
+              <div className={getScoreColor(atsScore)}>{atsScore}%</div>
             </div>
             <Progress value={overallScore} className="w-32 h-2" />
           </div>

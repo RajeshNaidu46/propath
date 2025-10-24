@@ -6,7 +6,6 @@ import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PerformanceOptimizer } from "@/components/performance-optimizer"
 import { ErrorBoundary } from "@/components/error-boundary"
-import { FloatingChatWidget } from "@/components/chat/floating-chat-widget"
 import { Navbar } from "@/components/navbar"
 import Footer from "@/components/footer"
 
@@ -103,8 +102,8 @@ export default function RootLayout({
                   richColors
                   closeButton
                 />
-                <FloatingChatWidget />
-                <Footer />
+                
+               <Footer />
               </PerformanceOptimizer>
             </ErrorBoundary>
           </AuthProvider>

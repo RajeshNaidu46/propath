@@ -394,7 +394,7 @@ export function SkillGapAnalysis({ initialRole = "", initialSkills = [], autoAna
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
-            Select Target Role
+            Select Target Role2
           </CardTitle>
           <CardDescription>
             Choose the role you're targeting to analyze skill gaps

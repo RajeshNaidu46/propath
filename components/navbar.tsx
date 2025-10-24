@@ -118,15 +118,15 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           {/* Search */}
           <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <Search className="h-4 w-4" />
+            {/* <Search className="h-4 w-4" /> */}
           </Button>
 
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-4 w-4" />
+            {/* <Bell className="h-4 w-4" />
             <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
               3
-            </Badge>
+            </Badge> */}
           </Button>
 
           {/* Theme Switcher - Prominent top corner positioning */}
@@ -159,7 +159,7 @@ export function Navbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  {/* <span>Profile</span> */}
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
@@ -168,7 +168,7 @@ export function Navbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  {/* <span>Log out</span> */}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -222,7 +222,7 @@ export function Navbar() {
             
             {user ? (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 px-2">
+                {/* <div className="flex items-center gap-2 px-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/placeholder-user.jpg" alt={user.name} />
                     <AvatarFallback>
@@ -233,7 +233,7 @@ export function Navbar() {
                     <p className="text-sm font-medium">{user.name}</p>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
-                </div>
+                </div> */}
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-destructive"

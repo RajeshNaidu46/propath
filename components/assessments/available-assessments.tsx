@@ -288,7 +288,7 @@ export function AvailableAssessments({ onStartAssessment }: AvailableAssessments
       ))}
 
       {/* Featured Assessment */}
-      <div className="mt-12 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+      {/* <div className="mt-12 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
         <div className="text-center">
           <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
             <Star className="h-4 w-4" />
@@ -318,7 +318,8 @@ export function AvailableAssessments({ onStartAssessment }: AvailableAssessments
             Take Featured Assessment
           </Button>
         </div>
-      </div>
-    </div>
+      </div> */}
+    </div> 
   )
 }
+

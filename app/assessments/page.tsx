@@ -42,7 +42,7 @@ export default function AssessmentsPage() {
                   </div>
 
                   {/* Overview Stats */}
-                  <div className="lg:col-span-1">
+                  {/* <div className="lg:col-span-1">
                     <div className="mb-6">
                       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                         <BarChart3 className="h-5 w-5" />
@@ -50,10 +50,10 @@ export default function AssessmentsPage() {
                       </h2>
                     </div>
                     <AssessmentOverview />
-                  </div>
+                  </div> */}
 
                   {/* Assessment History */}
-                  <div className="lg:col-span-4">
+                  {/* <div className="lg:col-span-4">
                     <div className="mb-6">
                       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                         <History className="h-5 w-5" />
@@ -61,7 +61,7 @@ export default function AssessmentsPage() {
                       </h2>
                     </div>
                     <AssessmentHistory />
-                  </div>
+                  </div> */}
                 </div>
               </>
             ) : (
