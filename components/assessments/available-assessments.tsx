@@ -18,9 +18,10 @@ import {
 } from "lucide-react"
 
 interface AvailableAssessmentsProps {
-  onStartAssessment: () => void
+  onStartAssessment: (assessmentId: string) => void
 }
 
+// Make sure these assessment IDs match exactly with the ones in assessment-interface.tsx
 const assessmentCategories = [
   {
     id: "frontend",
@@ -30,20 +31,20 @@ const assessmentCategories = [
     description: "HTML, CSS, JavaScript, React, Vue, Angular",
     assessments: [
       {
-        id: "frontend-basics",
+        id: "frontend-basics", // This must match the ID in assessment-interface.tsx
         title: "Frontend Basics",
         difficulty: "Beginner",
         duration: "30 min",
-        questions: 25,
+        questions: 5,
         completion: 0,
         rating: 4.8
       },
       {
-        id: "react-fundamentals",
+        id: "react-fundamentals", // This must match the ID in assessment-interface.tsx
         title: "React Fundamentals",
         difficulty: "Intermediate",
         duration: "45 min",
-        questions: 30,
+        questions: 3,
         completion: 0,
         rating: 4.9
       },
@@ -66,11 +67,11 @@ const assessmentCategories = [
     description: "Node.js, Python, Java, APIs, Databases",
     assessments: [
       {
-        id: "python-basics",
+        id: "python-basics", // This must match the ID in assessment-interface.tsx
         title: "Python Basics",
         difficulty: "Beginner",
         duration: "35 min",
-        questions: 22,
+        questions: 2,
         completion: 0,
         rating: 4.6
       },
@@ -242,18 +243,18 @@ export function AvailableAssessments({ onStartAssessment }: AvailableAssessments
               <Card 
                 key={assessment.id} 
                 className="professional-card hover:scale-105 transition-all duration-300 cursor-pointer"
-                onClick={onStartAssessment}
+                onClick={() => onStartAssessment(assessment.id)} // This now passes the correct ID
               >
                 <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between">
                     <CardTitle className="text-lg">{assessment.title}</CardTitle>
                     <Badge className={getDifficultyColor(assessment.difficulty)}>
                       {assessment.difficulty}
                     </Badge>
-                </div>
+                  </div>
                   <CardDescription className="flex items-center gap-4 text-sm">
                     <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
+                      <Clock className="h-3 w-3" />
                       {assessment.duration}
                     </span>
                     <span className="flex items-center gap-1">
@@ -267,59 +268,32 @@ export function AvailableAssessments({ onStartAssessment }: AvailableAssessments
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Progress</span>
                       <span className="text-sm font-medium">{assessment.completion}%</span>
-                </div>
+                    </div>
                     <Progress value={assessment.completion} className="h-2" />
 
-              <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <Star className="h-3 w-3 text-yellow-500 fill-current" />
                         <span className="text-sm font-medium">{assessment.rating}</span>
                       </div>
-                      <Button size="sm" className="premium-button">
+                      <Button 
+                        size="sm" 
+                        className="premium-button"
+                        onClick={(e) => {
+                          e.stopPropagation() // Prevent card click event
+                          onStartAssessment(assessment.id)
+                        }}
+                      >
                         Start Assessment
-                  </Button>
-              </div>
-            </div>
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-          ))}
+            ))}
           </div>
         </div>
       ))}
-
-      {/* Featured Assessment */}
-      {/* <div className="mt-12 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
-            <Star className="h-4 w-4" />
-            Featured Assessment
-          </div>
-          <h3 className="text-2xl font-bold mb-2">Full Stack Developer Assessment</h3>
-          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Comprehensive assessment covering frontend, backend, and DevOps skills. 
-            Perfect for developers looking to validate their full-stack capabilities.
-          </p>
-          <div className="flex items-center justify-center gap-6 mb-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">120</div>
-              <div className="text-sm text-muted-foreground">Questions</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">90</div>
-              <div className="text-sm text-muted-foreground">Minutes</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">4.9</div>
-              <div className="text-sm text-muted-foreground">Rating</div>
-            </div>
-          </div>
-          <Button size="lg" className="premium-button">
-            <Target className="h-4 w-4 mr-2" />
-            Take Featured Assessment
-          </Button>
-        </div>
-      </div> */}
     </div> 
   )
 }
-

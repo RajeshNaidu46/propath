@@ -26,8 +26,9 @@ import {
   Home,
   FileText,
   Brain,
-  MessageSquare,
-  BookOpen
+  MessageCircle,
+  BookOpen,
+  Briefcase
 } from "lucide-react"
 import Link from "next/link"
 
@@ -61,8 +62,9 @@ export function Navbar() {
     { name: "Dashboard", href: "/", icon: Home },
     { name: "Resume", href: "/resume", icon: FileText },
     { name: "Assessments", href: "/assessments", icon: Brain },
+    { name: "Career Chat", href: "/chat", icon: MessageCircle },
     { name: "Courses", href: "/courses", icon: BookOpen },
-    { name: "Chat", href: "/chat", icon: MessageSquare },
+    { name: "Jobs", href: "/jobs", icon: Briefcase },
   ]
 
   // Prevent hydration mismatch

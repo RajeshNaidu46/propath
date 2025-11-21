@@ -11,6 +11,17 @@ import { ArrowLeft, Brain, BarChart3, History } from "lucide-react"
 
 export default function AssessmentsPage() {
   const [currentView, setCurrentView] = useState<"overview" | "assessment">("overview")
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState<string>("")
+
+  const handleStartAssessment = (assessmentId: string) => {
+    setSelectedAssessmentId(assessmentId)
+    setCurrentView("assessment")
+  }
+
+  const handleBackToOverview = () => {
+    setCurrentView("overview")
+    setSelectedAssessmentId("")
+  }
 
   return (
     <div className="flex h-screen bg-background">
@@ -38,7 +49,7 @@ export default function AssessmentsPage() {
                         Available Assessments
                       </h2>
                     </div>
-                    <AvailableAssessments onStartAssessment={() => setCurrentView("assessment")} />
+                    <AvailableAssessments onStartAssessment={handleStartAssessment} />
                   </div>
 
                   {/* Overview Stats */}
@@ -69,14 +80,17 @@ export default function AssessmentsPage() {
                 <div className="flex items-center gap-4">
                   <Button
                     variant="outline"
-                    onClick={() => setCurrentView("overview")}
+                    onClick={handleBackToOverview}
                     className="flex items-center gap-2"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Assessments
                   </Button>
                 </div>
-                <AssessmentInterface assessmentId="default" />
+                <AssessmentInterface 
+                  assessmentId={selectedAssessmentId} 
+                  onBack={handleBackToOverview}
+                />
               </div>
             )}
           </div>

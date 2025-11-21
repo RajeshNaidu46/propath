@@ -1,3 +1,4 @@
+// app/resume/page.tsx
 "use client"
 
 import { useState } from "react"
@@ -5,20 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { ResumeUpload } from "@/components/resume/resume-upload"
 import { ResumeAnalysisResults } from "@/components/resume/resume-analysis-results"
-import { AIResumeWriter } from "@/components/resume/ai-resume-writer"
-import { 
-  FileText, 
-  Upload, 
-  Brain, 
-  Sparkles, 
-  Settings 
+
+import {
+  FileText,
+  Upload,
+  Brain,
+  Settings
 } from "lucide-react"
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
 export default function ResumeAnalysisPage() {
-  const [activeTab, setActiveTab] = useState<"analyze" | "ai-writer">("analyze")
+  const [activeTab, setActiveTab] = useState<"analyze">("analyze")
   const [analysisResults, setAnalysisResults] = useState<any>(null)
   const [isAnalysisStarted, setIsAnalysisStarted] = useState(false)
   const [resumeContent, setResumeContent] = useState<string>("")
@@ -26,7 +26,8 @@ export default function ResumeAnalysisPage() {
   const handleAnalysisComplete = (analysis: any) => {
     setAnalysisResults(analysis)
     setIsAnalysisStarted(false)
-    if (analysis.resumeContent) setResumeContent(analysis.resumeContent)
+    if (analysis && analysis.resumeContent) setResumeContent(analysis.resumeContent)
+    // if analysis doesn't include resumeContent, keep existing resumeContent
   }
 
   const handleUploadStart = () => setIsAnalysisStarted(true)
@@ -41,7 +42,7 @@ export default function ResumeAnalysisPage() {
             <h1 className="text-3xl font-bold">Resume Intelligence</h1>
           </div>
           <p className="text-muted-foreground">
-            AI-powered resume analysis, creation, and optimization
+            AI-powered resume analysis and optimization
           </p>
         </div>
 
@@ -67,15 +68,7 @@ export default function ResumeAnalysisPage() {
                   Resume Analysis
                 </Button>
 
-                <Button
-                  variant={activeTab === "ai-writer" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveTab("ai-writer")}
-                  className="px-6"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  AI Resume Writer
-                </Button>
+
               </div>
             </div>
           </CardContent>
@@ -85,14 +78,15 @@ export default function ResumeAnalysisPage() {
         {activeTab === "analyze" && (
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-1">
-              <ResumeUpload 
-                onAnalysisComplete={handleAnalysisComplete} 
+              <ResumeUpload
+                onAnalysisComplete={handleAnalysisComplete}
                 onUploadStart={handleUploadStart}
               />
             </div>
             <div className="xl:col-span-2 space-y-6">
               {analysisResults ? (
-                <ResumeAnalysisResults resumeContent={resumeContent} />
+                // pass initialAnalysis and resumeContent
+                <ResumeAnalysisResults initialAnalysis={analysisResults} resumeContent={resumeContent} />
               ) : isAnalysisStarted ? (
                 <Card className="professional-card h-full flex items-center justify-center">
                   <CardContent className="text-center text-muted-foreground">
@@ -114,30 +108,14 @@ export default function ResumeAnalysisPage() {
           </div>
         )}
 
-        {activeTab === "ai-writer" && (
-          <div className="space-y-6">
-            <AIResumeWriter />
-          </div>
-        )}
-
         {/* Features Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-          <Card className="professional-card hover:scale-105 transition-transform">
+        <div className="flex justify-center mt-8">
+          <Card className="professional-card hover:scale-105 transition-transform max-w-sm">
             <CardContent className="p-6 text-center">
               <Brain className="h-8 w-8 mx-auto mb-3 text-primary" />
               <h3 className="font-semibold mb-2">AI Analysis</h3>
               <p className="text-sm text-muted-foreground">
                 BERT-powered resume analysis with skill extraction and ATS optimization
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="professional-card hover:scale-105 transition-transform">
-            <CardContent className="p-6 text-center">
-              <Sparkles className="h-8 w-8 mx-auto mb-3 text-primary" />
-              <h3 className="font-semibold mb-2">AI Writer</h3>
-              <p className="text-sm text-muted-foreground">
-                Generate professional resumes with AI assistance and multiple styles
               </p>
             </CardContent>
           </Card>

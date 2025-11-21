@@ -1,13 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -200,10 +199,11 @@ const assessments: Assessment[] = [
 ]
 
 interface AssessmentInterfaceProps {
-  assessmentId: string
+  assessmentId?: string
+  onBack?: () => void
 }
 
-export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) {
+export function AssessmentInterface({ assessmentId, onBack }: AssessmentInterfaceProps) {
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
@@ -213,17 +213,21 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
   const [isCompleted, setIsCompleted] = useState(false)
   const [score, setScore] = useState(0)
   const [showResults, setShowResults] = useState(false)
-  const [questionStartTime, setQuestionStartTime] = useState(0)
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(0)
+  const [questionTimerActive, setQuestionTimerActive] = useState(false)
 
+  // Initialize assessment
   useEffect(() => {
-    // Find the assessment by ID
-    const assessment = assessments.find(a => a.id === assessmentId)
-    if (assessment) {
-      setSelectedAssessment(assessment)
-      setTimeLeft(assessment.totalTime * 60)
+    if (assessmentId) {
+      const assessment = assessments.find(a => a.id === assessmentId)
+      if (assessment) {
+        setSelectedAssessment(assessment)
+        setTimeLeft(assessment.totalTime * 60)
+      }
     }
   }, [assessmentId])
 
+  // Main assessment timer
   useEffect(() => {
     if (timeLeft > 0 && isStarted && !isCompleted) {
       const timer = setInterval(() => {
@@ -240,6 +244,34 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
     }
   }, [timeLeft, isStarted, isCompleted])
 
+  // Question timer
+  useEffect(() => {
+    if (questionTimerActive && questionTimeLeft > 0 && isStarted && !isCompleted) {
+      const questionTimer = setInterval(() => {
+        setQuestionTimeLeft(prev => {
+          if (prev <= 1) {
+            handleNextQuestion()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+      return () => clearInterval(questionTimer)
+    }
+  }, [questionTimeLeft, questionTimerActive, isStarted, isCompleted])
+
+  // Start question timer when question changes
+  useEffect(() => {
+    if (isStarted && selectedAssessment && !isCompleted) {
+      const currentQuestion = selectedAssessment.questions[currentQuestionIndex]
+      if (currentQuestion) {
+        setQuestionTimeLeft(currentQuestion.timeLimit)
+        setQuestionTimerActive(true)
+      }
+    }
+  }, [currentQuestionIndex, isStarted, selectedAssessment, isCompleted])
+
   const startAssessment = (assessment: Assessment) => {
     setSelectedAssessment(assessment)
     setIsStarted(true)
@@ -249,36 +281,41 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
     setScore(0)
     setShowResults(false)
     setIsCompleted(false)
+    setTimeLeft(assessment.totalTime * 60)
   }
 
   const handleAnswerSelect = (answerIndex: number) => {
     setSelectedAnswer(answerIndex)
   }
 
-  const handleNextQuestion = () => {
-    if (selectedAnswer !== null && selectedAssessment) {
-      const currentQuestion = selectedAssessment.questions[currentQuestionIndex]
-      setAnswers(prev => ({
-        ...prev,
-        [currentQuestion.id]: selectedAnswer
-      }))
+  const handleNextQuestion = useCallback(() => {
+    if (selectedAssessment) {
+      // Save current answer if selected
+      if (selectedAnswer !== null) {
+        const currentQuestion = selectedAssessment.questions[currentQuestionIndex]
+        setAnswers(prev => ({
+          ...prev,
+          [currentQuestion.id]: selectedAnswer
+        }))
+      }
 
+      // Move to next question or complete assessment
       if (currentQuestionIndex < selectedAssessment.questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1)
-        setSelectedAnswer(answers[selectedAssessment.questions[currentQuestionIndex + 1]?.id] || null)
-        setQuestionStartTime(Date.now())
+        const nextQuestionId = selectedAssessment.questions[currentQuestionIndex + 1]?.id
+        setSelectedAnswer(answers[nextQuestionId] ?? null)
       } else {
         handleCompleteAssessment()
       }
     }
-  }
+  }, [currentQuestionIndex, selectedAssessment, selectedAnswer, answers])
 
   const handlePreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
+    if (currentQuestionIndex > 0 && selectedAssessment) {
       setCurrentQuestionIndex(prev => prev - 1)
-      const prevQuestion = selectedAssessment?.questions[currentQuestionIndex - 1]
+      const prevQuestion = selectedAssessment.questions[currentQuestionIndex - 1]
       if (prevQuestion) {
-        setSelectedAnswer(answers[prevQuestion.id] || null)
+        setSelectedAnswer(answers[prevQuestion.id] ?? null)
       }
     }
   }
@@ -286,6 +323,16 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
   const handleCompleteAssessment = () => {
     if (!selectedAssessment) return
 
+    // Save final answer
+    if (selectedAnswer !== null) {
+      const currentQuestion = selectedAssessment.questions[currentQuestionIndex]
+      setAnswers(prev => ({
+        ...prev,
+        [currentQuestion.id]: selectedAnswer
+      }))
+    }
+
+    // Calculate score
     let correctAnswers = 0
     selectedAssessment.questions.forEach(question => {
       const userAnswer = answers[question.id]
@@ -298,6 +345,7 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
     setScore(finalScore)
     setIsCompleted(true)
     setShowResults(true)
+    setQuestionTimerActive(false)
   }
 
   const resetAssessment = () => {
@@ -310,6 +358,8 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
     setShowResults(false)
     setIsCompleted(false)
     setTimeLeft(0)
+    setQuestionTimeLeft(0)
+    setQuestionTimerActive(false)
   }
 
   const formatTime = (seconds: number) => {
@@ -327,13 +377,28 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
     }
   }
 
-  if (!selectedAssessment) {
+  const getTimeColor = (timeLeft: number, totalTime: number) => {
+    const percentage = (timeLeft / totalTime) * 100
+    if (percentage > 50) return 'text-green-600'
+    if (percentage > 25) return 'text-yellow-600'
+    return 'text-red-600'
+  }
+
+  // Show assessment selection if no assessment is selected
+  if (!selectedAssessment || !isStarted) {
     return (
       <div className="space-y-6 fade-in">
+        {onBack && (
+          <Button variant="outline" onClick={onBack} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Assessments
+          </Button>
+        )}
+        
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-4">Choose Your Assessment</h2>
           <p className="text-muted-foreground">Select an assessment to test your skills</p>
-              </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {assessments.map((assessment) => (
@@ -362,10 +427,10 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
                   <div className="flex items-center gap-2 text-sm">
                     <Target className="h-4 w-4" />
                     <span>{assessment.passingScore}% passing score</span>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -420,7 +485,7 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
                 <div className="text-3xl font-bold text-purple-600">{selectedAssessment.questions.length}</div>
                 <div className="text-sm text-purple-700">Total Questions</div>
               </div>
-          </div>
+            </div>
 
             <div className="space-y-4">
               <h3 className="font-semibold">Question Review</h3>
@@ -428,7 +493,7 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
                 const userAnswer = answers[question.id]
                 const isCorrect = userAnswer === question.correctAnswer
 
-            return (
+                return (
                   <div key={question.id} className="border rounded-lg p-4 slide-in-left">
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium">Question {index + 1}</h4>
@@ -436,24 +501,24 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
                         <Badge className={getDifficultyColor(question.difficulty)}>
                           {question.difficulty}
                         </Badge>
-                    {isCorrect ? (
+                        {isCorrect ? (
                           <CheckCircle className="h-5 w-5 text-green-600" />
-                    ) : (
+                        ) : (
                           <XCircle className="h-5 w-5 text-red-600" />
-                    )}
-                  </div>
+                        )}
+                      </div>
                     </div>
                     <p className="mb-3">{question.question}</p>
-                  <div className="space-y-2">
+                    <div className="space-y-2">
                       {question.options.map((option, optionIndex) => (
-                      <div
-                        key={optionIndex}
-                          className={`p-2 rounded ${
+                        <div
+                          key={optionIndex}
+                          className={`p-2 rounded border ${
                             optionIndex === question.correctAnswer
                               ? 'bg-green-100 border-green-300'
-                            : optionIndex === userAnswer && !isCorrect
+                              : optionIndex === userAnswer && !isCorrect
                               ? 'bg-red-100 border-red-300'
-                              : 'bg-gray-50'
+                              : 'bg-gray-50 border-gray-200'
                           }`}
                         >
                           {option}
@@ -463,24 +528,26 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
                           {optionIndex === userAnswer && !isCorrect && (
                             <XCircle className="h-4 w-4 text-red-600 inline ml-2" />
                           )}
-                      </div>
-                    ))}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
                     <p className="mt-3 text-sm text-gray-600">
                       <strong>Explanation:</strong> {question.explanation}
                     </p>
                   </div>
-            )
-          })}
-        </div>
+                )
+              })}
+            </div>
 
             <div className="flex gap-4 justify-center">
               <Button onClick={resetAssessment} variant="outline">
                 Take Another Assessment
               </Button>
-              <Button onClick={() => setShowResults(false)}>
-                Review Answers
-              </Button>
+              {onBack && (
+                <Button onClick={onBack}>
+                  Back to Assessments
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -491,25 +558,47 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
   const currentQuestion = selectedAssessment.questions[currentQuestionIndex]
   const progress = ((currentQuestionIndex + 1) / selectedAssessment.questions.length) * 100
 
+  if (!currentQuestion) {
+    return (
+      <div className="text-center p-8">
+        <p>No questions available for this assessment.</p>
+        <Button onClick={resetAssessment} className="mt-4">
+          Back to Assessment Selection
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6 fade-in">
-        {/* Header */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-            <div>
+        <div>
           <h2 className="text-2xl font-bold">{selectedAssessment.title}</h2>
           <p className="text-muted-foreground">Question {currentQuestionIndex + 1} of {selectedAssessment.questions.length}</p>
-            </div>
-            <div className="flex items-center gap-4">
+        </div>
+        <div className="flex items-center gap-4">
+          {/* Question Timer */}
+          <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg">
+            <Timer className="h-4 w-4 text-blue-600" />
+            <span className={`font-mono ${getTimeColor(questionTimeLeft, currentQuestion.timeLimit)}`}>
+              {formatTime(questionTimeLeft)}
+            </span>
+          </div>
+          
+          {/* Assessment Timer */}
           <div className="flex items-center gap-2 bg-red-50 px-3 py-2 rounded-lg">
             <Clock className="h-4 w-4 text-red-600" />
-            <span className="font-mono text-red-600">{formatTime(timeLeft)}</span>
-              </div>
-            </div>
+            <span className={`font-mono ${getTimeColor(timeLeft, selectedAssessment.totalTime * 60)}`}>
+              {formatTime(timeLeft)}
+            </span>
           </div>
+        </div>
+      </div>
 
       {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
           <span>Progress</span>
           <span>{Math.round(progress)}%</span>
         </div>
@@ -535,7 +624,10 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
           <div>
             <h3 className="text-lg font-semibold mb-4">{currentQuestion.question}</h3>
             
-            <RadioGroup value={selectedAnswer?.toString()} onValueChange={(value) => setSelectedAnswer(parseInt(value))}>
+            <RadioGroup 
+              value={selectedAnswer?.toString()} 
+              onValueChange={(value) => setSelectedAnswer(parseInt(value))}
+            >
               {currentQuestion.options.map((option, index) => (
                 <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                   <RadioGroupItem value={index.toString()} id={`option-${index}`} />
@@ -543,11 +635,11 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
                     {option}
                   </Label>
                 </div>
-            ))}
+              ))}
             </RadioGroup>
           </div>
 
-        {/* Navigation */}
+          {/* Navigation */}
           <div className="flex justify-between">
             <Button
               variant="outline"
@@ -555,11 +647,11 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
               disabled={currentQuestionIndex === 0}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
+              Previous
+            </Button>
 
             <Button
-              onClick={handleNextQuestion}
+              onClick={currentQuestionIndex === selectedAssessment.questions.length - 1 ? handleCompleteAssessment : handleNextQuestion}
               disabled={selectedAnswer === null}
               className="premium-button"
             >
@@ -574,7 +666,7 @@ export function AssessmentInterface({ assessmentId }: AssessmentInterfaceProps) 
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </>
               )}
-              </Button>
+            </Button>
           </div>
         </CardContent>
       </Card>
